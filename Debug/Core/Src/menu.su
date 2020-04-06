@@ -1,0 +1,4 @@
+menu.c:89:6:SerialDownload	24	static
+menu.c:130:6:SerialUpload	16	static
+menu.c:160:6:Main_Menu	16	static,ignoring_inline_asm
+menu.c:273:6:Delete	16	static,ignoring_inline_asm
