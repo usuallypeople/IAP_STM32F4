@@ -445,6 +445,7 @@ COM_StatusTypeDef Ymodem_Receive ( uint32_t *p_size )
             /* Abort communication */
             Serial_PutByte(CA);
             Serial_PutByte(CA);
+            NVIC_SystemReset();
           }
           else
           {

@@ -110,11 +110,14 @@ int main(void)
 	  HAL_Delay(10000);
 	  if (flag==0)
 	  {
-		  JumpAddress = *(__IO uint32_t*) (APPLICATION_ADDRESS + 4);
-		  JumpToApplication = (pFunction) JumpAddress;
-		  /* Initialize user application's Stack Pointer */
-		  __set_MSP(*(__IO uint32_t*) APPLICATION_ADDRESS);
-		  JumpToApplication();
+		  if (((*(__IO uint32_t*) APPLICATION_ADDRESS) & 0x2FFE0000) == 0x20000000)
+		  {
+			  JumpAddress = *(__IO uint32_t*) (APPLICATION_ADDRESS + 4);
+			  JumpToApplication = (pFunction) JumpAddress;
+			  /* Initialize user application's Stack Pointer */
+			  __set_MSP(*(__IO uint32_t*) APPLICATION_ADDRESS);
+			  JumpToApplication();
+		  }
 	  }
 
 	  HAL_GPIO_TogglePin(GPIOD,GPIO_PIN_14);
