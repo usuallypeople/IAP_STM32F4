@@ -91,8 +91,9 @@ void SerialDownload(void)
   uint8_t number[11] = {0};
   uint32_t size = 0;
   COM_StatusTypeDef result;
-
-  Serial_PutString((uint8_t *)"IAP processing");
+  HAL_Delay(300);
+  Serial_PutString((uint8_t *)"IAP processing\r\n");
+  HAL_Delay(500);
   result = Ymodem_Receive( &size );
   if (result == COM_OK)
   {
@@ -107,18 +108,22 @@ void SerialDownload(void)
   else if (result == COM_LIMIT)
   {
     Serial_PutString((uint8_t *)"\n\n\rThe image size is higher than the allowed space memory!\n\r");
+    NVIC_SystemReset();
   }
   else if (result == COM_DATA)
   {
     Serial_PutString((uint8_t *)"\n\n\rVerification failed!\n\r");
+    NVIC_SystemReset();
   }
   else if (result == COM_ABORT)
   {
     Serial_PutString((uint8_t *)"\r\n\nAborted by user.\n\r");
+    NVIC_SystemReset();
   }
   else
   {
     Serial_PutString((uint8_t *)"\n\rFailed to receive the file!\n\r");
+    NVIC_SystemReset();
   }
 }
 
@@ -172,102 +177,20 @@ void Main_Menu(void)
   Serial_PutString((uint8_t *)"\r\n======================================================================");
   Serial_PutString((uint8_t *)"\r\n\r\n");
   */
-  while (1)
-  {
+  Serial_PutString((uint8_t *)"\r\nUpload image from the internal Flash \r\n");
+  SerialDownload();
+  HAL_Delay(500);
+  Serial_PutString((uint8_t *)"\r\nStart program execution\r\n");
+  /* execute the new program */
+  JumpAddress = *(__IO uint32_t*) (APPLICATION_ADDRESS + 4);
+  /* Jump to user application */
+  JumpToApplication = (pFunction) JumpAddress;
+  /* Initialize user application's Stack Pointer */
+  __set_MSP(*(__IO uint32_t*) APPLICATION_ADDRESS);
+  //__disable_irq();
+  HAL_Delay(500);
+  JumpToApplication();
 
-    /* Test if any sector of Flash memory where user application will be loaded is write protected */
-
-    FlashProtection = FLASH_If_GetWriteProtectionStatus();
-    
-    Serial_PutString((uint8_t *)"\r\n=================== Main Menu ============================\r\n");
-    Serial_PutString((uint8_t *)"  Download image to the internal Flash ----------------- 1\r\n");
-    Serial_PutString((uint8_t *)"  Upload image from the internal Flash ----------------- 2\r\n");
-    Serial_PutString((uint8_t *)"  Execute the loaded application ----------------------- 3\r\n");
-
-    if(FlashProtection != FLASHIF_PROTECTION_NONE)
-    {
-      Serial_PutString((uint8_t *)"  Disable the write protection ------------------------- 4\r\n");
-    }
-    else
-    {
-      Serial_PutString((uint8_t *)"  Enable the write protection -------------------------- 4\r\n");
-    }
-    Serial_PutString((uint8_t *)"==========================================================\r\n");
-    Serial_PutString((uint8_t *)"okay");
-
-    /* Clean the input path */
-    __HAL_UART_FLUSH_DRREGISTER(&UartHandle);
-	
-    /* Receive key */
-    //char aa = HAL_UART_Receive(&UartHandle, &key, 1, RX_TIMEOUT);
-    //0x7530); //time out 30s
-    if (HAL_UART_Receive(&UartHandle, &key, 1,0x2710) == HAL_TIMEOUT)
-    {
-    	Serial_PutString((uint8_t *)"  Time out \r\n\n");
-    	HAL_UART_Receive_IT(&huart6, (uint8_t *)aRxBuffer, 1);
-    	break;
-    }
-    switch (key)
-    {
-    case '1' :
-      /* Download user application in the Flash */
-      SerialDownload();
-      break;
-    case '2' :
-      /* Upload user application from the Flash */
-      SerialUpload();
-      break;
-    case '3' :
-      //
-      Serial_PutString((uint8_t *)"Start program execution......\r\n");
-      /* execute the new program */
-      JumpAddress = *(__IO uint32_t*) (APPLICATION_ADDRESS + 4);
-      /* Jump to user application */
-      JumpToApplication = (pFunction) JumpAddress;
-      /* Initialize user application's Stack Pointer */
-      __set_MSP(*(__IO uint32_t*) APPLICATION_ADDRESS);
-      //__disable_irq();
-      JumpToApplication();
-
-      break;
-    case '4' :
-      if (FlashProtection != FLASHIF_PROTECTION_NONE)
-      {
-        /* Disable the write protection */
-        if (FLASH_If_WriteProtectionConfig(OB_WRPSTATE_DISABLE) == HAL_OK)
-        {
-          Serial_PutString((uint8_t *)"Write Protection disabled...\r\n");
-          Serial_PutString((uint8_t *)"System will now restart...\r\n");
-          /* Launch the option byte loading */
-          HAL_FLASH_OB_Launch();
-          /* Ulock the flash */
-          HAL_FLASH_Unlock();
-        }
-        else
-        {
-          Serial_PutString((uint8_t *)"Error: Flash write un-protection failed...\r\n");
-        }
-      }
-      else
-      {
-        if (FLASH_If_WriteProtectionConfig(OB_WRPSTATE_ENABLE) == HAL_OK)
-        {
-          Serial_PutString((uint8_t *)"Write Protection enabled...\r\n");
-          Serial_PutString((uint8_t *)"System will now restart...\r\n");
-          /* Launch the option byte loading */
-          HAL_FLASH_OB_Launch();
-        }
-        else
-        {
-          Serial_PutString((uint8_t *)"Error: Flash write protection failed...\r\n");
-        }
-      }
-      break;
-    default:
-	Serial_PutString((uint8_t *)"Invalid Number ! ==> The number should be either 1, 2, 3 or 4\r");
-	break;
-    }
-  }
 }
 
 void Delete(UART_HandleTypeDef *huart)

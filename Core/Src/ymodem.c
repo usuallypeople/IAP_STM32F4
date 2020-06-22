@@ -397,6 +397,7 @@ COM_StatusTypeDef Ymodem_Receive ( uint32_t *p_size )
 
                     Serial_PutByte(ACK);
                     Serial_PutByte(CRC16);
+
                   }
                   /* File header packet is empty, end session */
                   else
@@ -467,7 +468,7 @@ COM_StatusTypeDef Ymodem_Receive ( uint32_t *p_size )
   */
 COM_StatusTypeDef Ymodem_Transmit (uint8_t *p_buf, const uint8_t *p_file_name, uint32_t file_size)
 {
-  uint32_t errors = 0, ack_recpt = 0, size = 0, pkt_size;
+  uint32_t count = 0,errors = 0, ack_recpt = 0, size = 0, pkt_size;
   uint8_t *p_buf_int;
   COM_StatusTypeDef result = COM_OK;
   uint32_t blk_number = 1;

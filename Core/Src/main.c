@@ -107,10 +107,17 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  HAL_Delay(10000);
+	  if (flag ==1)
+	  {
+		  Main_Menu();
+		  flag = 0;
+	  }
+	  HAL_Delay(3000);
 	  if (flag==0)
 	  {
-		  if (((*(__IO uint32_t*) APPLICATION_ADDRESS) & 0x2FFE0000) == 0x20000000)
+		  uint32_t ramstart = (*(__IO uint32_t*) APPLICATION_ADDRESS) & 0x2FFE0000;
+		  HAL_Delay(1000);
+		  if ( ramstart == 0x20020000)
 		  {
 			  JumpAddress = *(__IO uint32_t*) (APPLICATION_ADDRESS + 4);
 			  JumpToApplication = (pFunction) JumpAddress;
@@ -119,14 +126,6 @@ int main(void)
 			  JumpToApplication();
 		  }
 	  }
-
-	  HAL_GPIO_TogglePin(GPIOD,GPIO_PIN_14);
-	  if (flag ==1)
-	  {
-		  Main_Menu();
-		  flag = 0;
-	  }
-
   }
   /* USER CODE END 3 */
 }
