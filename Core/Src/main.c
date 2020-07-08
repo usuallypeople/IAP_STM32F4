@@ -47,6 +47,7 @@ UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN PV */
 uint8_t aRxBuffer[7];
+uint8_t count;
 _Bool flag ;
 /* USER CODE END PV */
 
@@ -77,10 +78,12 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+
   HAL_Init();
 
   /* USER CODE BEGIN Init */
   flag = 0;
+  count=0;
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -107,25 +110,31 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  //HAL_GPIO_TogglePin(GPIOD,GPIO_PIN_14|GPIO_PIN_13);
+
 	  if (flag ==1)
 	  {
 		  Main_Menu();
 		  flag = 0;
 	  }
-	  HAL_Delay(3000);
+	  HAL_Delay(1000);
+
 	  if (flag==0)
 	  {
 		  uint32_t ramstart = (*(__IO uint32_t*) APPLICATION_ADDRESS) & 0x2FFE0000;
-		  HAL_Delay(1000);
-		  if ( ramstart == 0x20020000)
+		  if ( ramstart == 0x20020000 || ramstart == 0x20000000)
 		  {
 			  JumpAddress = *(__IO uint32_t*) (APPLICATION_ADDRESS + 4);
 			  JumpToApplication = (pFunction) JumpAddress;
-			  /* Initialize user application's Stack Pointer */
 			  __set_MSP(*(__IO uint32_t*) APPLICATION_ADDRESS);
+			  HAL_Delay(500);
 			  JumpToApplication();
 		  }
 	  }
+
+
+
+
   }
   /* USER CODE END 3 */
 }
@@ -238,12 +247,38 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   /* Prevent unused argument(s) compilation warning */
   UNUSED(huart);
+  HAL_GPIO_TogglePin(GPIOD,GPIO_PIN_15);
+  if(aRxBuffer[0] == 'r' & aRxBuffer[6]=='t')
+  {
+	  HAL_UART_Transmit(&huart6, "IAP START", 9,0x2710);
+	  flag=1;
+  }
 
   /* NOTE : This function should not be modified, when the callback is needed,
             the HAL_UART_RxCpltCallback can be implemented in the user file
    */
-  HAL_UART_Transmit(&huart6, "IAP START", 9,0x2710);
-  flag=1;
+/*
+   ListBuffer[count++]= aRxBuffer;
+   if(aRxBuffer==0x0A)
+   {
+ 	  count=0;
+
+   }
+
+
+
+   	if(count>=24)
+   	{
+   		count=0;
+   		memset( USARTBLE.RevData, 0, strlen(USARTBLE.RevData) ); //clear Receive data
+   	}
+
+   while(HAL_UART_Receive_IT(&huart6,&USARTBLE.Rbuffer,1)==HAL_OK);
+
+*/
+
+
+
 
 }
 
