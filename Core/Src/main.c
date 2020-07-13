@@ -97,7 +97,12 @@ int main(void)
   MX_GPIO_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart6, (uint8_t *)aRxBuffer, 7);
+  //HAL_UART_Receive_IT(&huart6, (uint8_t *)aRxBuffer, 7);
+
+  if(HAL_UART_Transmit(&huart6, "RESTART\r\n", 9, 10)==HAL_OK)
+  {
+	  HAL_UART_Receive_IT(&huart6, (uint8_t *)aRxBuffer, 7);
+  }
 
 
 
